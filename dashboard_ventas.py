@@ -102,6 +102,10 @@ df_future['is_weekend'] = [1 if (last_date + timedelta(days=i)).weekday() >= 5 e
 
 for col in ['bank_name', 'district', 'mes_estacional']:
     df_future[col] = df_grouped[col].mode()[0]
+X_future = df_future[features]
+X_future_scaled = scaler.transform(X_future)
+predictions = model.predict(X_future_scaled).flatten()
+df_future['predicted_sales'] = predictions
 
 # ========================
 # 7. Gráfico interactivo
@@ -135,9 +139,10 @@ st.dataframe(df_future[['date', 'predicted_sales']].round(2).rename(columns={
 # 9. Explicación para no técnicos
 # ========================
 with st.expander("🧠 ¿Cómo funciona este modelo?"):
-    st.markdown(\"\"\"
+    st.markdown("""
 - El modelo usa una red neuronal para aprender patrones históricos de ventas.
 - Se entrena con variables como cantidad vendida, precio, hora del día, banco, distrito, etc.
 - Una vez entrenado, puede predecir las ventas para los próximos 30 días con buena precisión.
 - Aunque no es perfecto, ayuda al equipo de logística a anticipar demanda de inventario y personal.
-\"\"\")
+""")
+
