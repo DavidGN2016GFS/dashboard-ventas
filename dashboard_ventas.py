@@ -93,16 +93,15 @@ df_future = df_grouped.sort_values('date').tail(30).copy()
 last_date = df_grouped['date'].max()
 df_future['date'] = [last_date + timedelta(days=i) for i in range(1, 31)]
 
-for col in ['quantity', 'unit_price', 'hour', 'is_weekend']:
-    df_future[col] = df_grouped[col].mean()
+# Aplicar tendencia ascendente y variación
+dias = np.arange(1, 31)
+df_future['quantity'] = df_grouped['quantity'].mean() * (1 + 0.01 * dias)
+df_future['unit_price'] = df_grouped['unit_price'].mean()
+df_future['hour'] = df_grouped['hour'].mean() + np.sin(np.linspace(0, np.pi, 30))
+df_future['is_weekend'] = [1 if (last_date + timedelta(days=i)).weekday() >= 5 else 0 for i in range(1, 31)]
+
 for col in ['bank_name', 'district', 'mes_estacional']:
     df_future[col] = df_grouped[col].mode()[0]
-
-X_future = df_future[features]
-X_future_scaled = scaler.transform(X_future)
-predictions = model.predict(X_future_scaled).flatten()
-
-df_future['predicted_sales'] = predictions
 
 # ========================
 # 7. Gráfico interactivo
@@ -136,9 +135,9 @@ st.dataframe(df_future[['date', 'predicted_sales']].round(2).rename(columns={
 # 9. Explicación para no técnicos
 # ========================
 with st.expander("🧠 ¿Cómo funciona este modelo?"):
-    st.markdown("""
+    st.markdown(\"\"\"
 - El modelo usa una red neuronal para aprender patrones históricos de ventas.
 - Se entrena con variables como cantidad vendida, precio, hora del día, banco, distrito, etc.
 - Una vez entrenado, puede predecir las ventas para los próximos 30 días con buena precisión.
 - Aunque no es perfecto, ayuda al equipo de logística a anticipar demanda de inventario y personal.
-""")
+\"\"\")
